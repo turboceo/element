@@ -116,6 +116,8 @@ import {
 import NavigationMixin from "./navigation-mixin";
 import { isKorean } from "element-ui/src/utils/shared";
 
+let toString = (obj) => Object.prototype.toString.call(obj).toLowerCase();
+
 export default {
   mixins: [Emitter, Locale, Focus("reference"), NavigationMixin],
 
@@ -210,9 +212,6 @@ export default {
       return this.disabled || (this.elForm || {}).disabled;
     },
 
-    collapseTagSize() {
-      return ["small", "mini"].indexOf(this.selectSize) > -1 ? "mini" : "small";
-    },
     propPlaceholder() {
       return typeof this.placeholder !== "undefined"
         ? this.placeholder
@@ -368,17 +367,12 @@ export default {
         if (this.filterable) {
           this.query = this.selectedLabel;
           this.handleQueryChange(this.query);
-          if (this.multiple) {
-            this.$refs.input.focus();
-          } else {
-            if (!this.remote) {
-              this.broadcast("ElOption", "queryChange", "");
-            }
-
-            if (this.selectedLabel) {
-              this.currentPlaceholder = this.selectedLabel;
-              this.selectedLabel = "";
-            }
+          if (!this.remote) {
+            this.broadcast("ElOption", "queryChange", "");
+          }
+          if (this.selectedLabel) {
+            this.currentPlaceholder = this.selectedLabel;
+            this.selectedLabel = "";
           }
         }
       }
@@ -435,18 +429,11 @@ export default {
         if (this.visible) this.broadcast("ElSelectDropdown", "updatePopper");
       });
       this.hoverIndex = -1;
-      if (this.remote && typeof this.remoteMethod === "function") {
-        this.hoverIndex = -1;
-        this.remoteMethod(val);
-      } else if (typeof this.filterMethod === "function") {
-        this.filterMethod(val);
-      } else {
-        this.filteredOptionsCount = this.optionsCount;
-        this.broadcast("ElOption", "queryChange", val);
-      }
+      this.filteredOptionsCount = this.optionsCount;
+      this.broadcast("ElOption", "queryChange", val);
       if (
         this.defaultFirstOption &&
-        (this.filterable || this.remote) &&
+        this.filterable &&
         this.filteredOptionsCount
       ) {
         this.checkDefaultFirstOption();
@@ -477,14 +464,10 @@ export default {
 
     getOption(value) {
       let option;
-      const isObject =
-        Object.prototype.toString.call(value).toLowerCase() ===
-        "[object object]";
-      const isNull =
-        Object.prototype.toString.call(value).toLowerCase() === "[object null]";
-      const isUndefined =
-        Object.prototype.toString.call(value).toLowerCase() ===
-        "[object undefined]";
+
+      const isObject = toString(value) === "[object object]";
+      const isNull = toString(value) === "[object null]";
+      const isUndefined = toString(value) === "[object undefined]";
 
       for (let i = this.cachedOptions.length - 1; i >= 0; i--) {
         const cachedOption = this.cachedOptions[i];
@@ -650,30 +633,9 @@ export default {
     },
 
     handleOptionSelect(option, byClick) {
-      if (this.multiple) {
-        const value = (this.value || []).slice();
-        const optionIndex = this.getValueIndex(value, option.value);
-        if (optionIndex > -1) {
-          value.splice(optionIndex, 1);
-        } else if (
-          this.multipleLimit <= 0 ||
-          value.length < this.multipleLimit
-        ) {
-          value.push(option.value);
-        }
-        this.$emit("input", value);
-        this.emitChange(value);
-        if (option.created) {
-          this.query = "";
-          this.handleQueryChange("");
-          this.inputLength = 20;
-        }
-        if (this.filterable) this.$refs.input.focus();
-      } else {
-        this.$emit("input", option.value);
-        this.emitChange(option.value);
-        this.visible = false;
-      }
+      this.$emit("input", option.value);
+      this.emitChange(option.value);
+      this.visible = false;
       this.isSilentBlur = byClick;
       this.setSoftFocus();
       if (this.visible) return;
@@ -691,9 +653,7 @@ export default {
     },
 
     getValueIndex(arr = [], value) {
-      const isObject =
-        Object.prototype.toString.call(value).toLowerCase() ===
-        "[object object]";
+      const isObject = toString(value) === "[object object]";
       if (!isObject) {
         return arr.indexOf(value);
       } else {
@@ -798,10 +758,7 @@ export default {
     },
 
     getValueKey(item) {
-      if (
-        Object.prototype.toString.call(item.value).toLowerCase() !==
-        "[object object]"
-      ) {
+      if (toString(item.value) !== "[object object]") {
         return item.value;
       } else {
         return getValueByPath(item.value, this.valueKey);
@@ -811,13 +768,6 @@ export default {
 
   created() {
     this.cachedPlaceHolder = this.currentPlaceholder = this.propPlaceholder;
-    if (this.multiple && !Array.isArray(this.value)) {
-      this.$emit("input", []);
-    }
-    if (!this.multiple && Array.isArray(this.value)) {
-      this.$emit("input", "");
-    }
-
     this.debouncedOnInputChange = debounce(this.debounce, () => {
       this.onInputChange();
     });
