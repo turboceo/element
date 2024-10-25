@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      type === 'textarea' ? 'el-textarea' : 'el-input',
+      'el-input',
       inputSize ? 'el-input--' + inputSize : '',
       {
         'is-disabled': inputDisabled,
@@ -17,103 +17,68 @@
     @mouseenter="hovering = true"
     @mouseleave="hovering = false"
   >
-    <template v-if="type !== 'textarea'">
-      <!-- 前置元素 -->
-      <div class="el-input-group__prepend" v-if="$slots.prepend">
-        <slot name="prepend"></slot>
-      </div>
-      <input
-        :tabindex="tabindex"
-        v-if="type !== 'textarea'"
-        class="el-input__inner"
-        v-bind="$attrs"
-        :type="showPassword ? (passwordVisible ? 'text' : 'password') : type"
-        :disabled="inputDisabled"
-        :readonly="readonly"
-        :autocomplete="autoComplete || autocomplete"
-        ref="input"
-        @compositionstart="handleCompositionStart"
-        @compositionupdate="handleCompositionUpdate"
-        @compositionend="handleCompositionEnd"
-        @input="handleInput"
-        @focus="handleFocus"
-        @blur="handleBlur"
-        @change="handleChange"
-        :aria-label="label"
-      />
-      <!-- 前置内容 -->
-      <span class="el-input__prefix" v-if="$slots.prefix || prefixIcon">
-        <slot name="prefix"></slot>
-        <i class="el-input__icon" v-if="prefixIcon" :class="prefixIcon"> </i>
-      </span>
-      <!-- 后置内容 -->
-      <span class="el-input__suffix" v-if="getSuffixVisible()">
-        <span class="el-input__suffix-inner">
-          <template v-if="!showClear || !showPwdVisible || !isWordLimitVisible">
-            <slot name="suffix"></slot>
-            <i class="el-input__icon" v-if="suffixIcon" :class="suffixIcon">
-            </i>
-          </template>
-          <i
-            v-if="showClear"
-            class="el-input__icon el-icon-circle-close el-input__clear"
-            @mousedown.prevent
-            @click="clear"
-          ></i>
-          <i
-            v-if="showPwdVisible"
-            class="el-input__icon el-icon-view el-input__clear"
-            @click="handlePasswordVisible"
-          ></i>
-          <span v-if="isWordLimitVisible" class="el-input__count">
-            <span class="el-input__count-inner">
-              {{ textLength }}/{{ upperLimit }}
-            </span>
-          </span>
-        </span>
-        <i
-          class="el-input__icon"
-          v-if="validateState"
-          :class="['el-input__validateIcon', validateIcon]"
-        >
-        </i>
-      </span>
-      <!-- 后置元素 -->
-      <div class="el-input-group__append" v-if="$slots.append">
-        <slot name="append"></slot>
-      </div>
-    </template>
-    <textarea
-      v-else
+    <!-- 前置元素 -->
+    <div class="el-input-group__prepend" v-if="$slots.prepend">
+      <slot name="prepend"></slot>
+    </div>
+    <input
       :tabindex="tabindex"
-      class="el-textarea__inner"
+      v-if="type !== 'textarea'"
+      class="el-input__inner"
+      v-bind="$attrs"
+      :type="showPassword ? (passwordVisible ? 'text' : 'password') : type"
+      :disabled="inputDisabled"
+      :readonly="readonly"
+      :autocomplete="autoComplete || autocomplete"
+      ref="input"
       @compositionstart="handleCompositionStart"
       @compositionupdate="handleCompositionUpdate"
       @compositionend="handleCompositionEnd"
       @input="handleInput"
-      ref="textarea"
-      v-bind="$attrs"
-      :disabled="inputDisabled"
-      :readonly="readonly"
-      :autocomplete="autoComplete || autocomplete"
-      :style="textareaStyle"
       @focus="handleFocus"
       @blur="handleBlur"
       @change="handleChange"
       :aria-label="label"
-    >
-    </textarea>
-    <span
-      v-if="isWordLimitVisible && type === 'textarea'"
-      class="el-input__count"
-      >{{ textLength }}/{{ upperLimit }}</span
-    >
+    />
+    <!-- 前置内容 -->
+    <span class="el-input__prefix" v-if="$slots.prefix || prefixIcon">
+      <slot name="prefix"></slot>
+      <i class="el-input__icon" v-if="prefixIcon" :class="prefixIcon"> </i>
+    </span>
+    <!-- 后置内容 -->
+    <span class="el-input__suffix" v-if="getSuffixVisible()">
+      <span class="el-input__suffix-inner">
+        <template v-if="!showClear || !showPwdVisible || !isWordLimitVisible">
+          <slot name="suffix"></slot>
+          <i class="el-input__icon" v-if="suffixIcon" :class="suffixIcon"> </i>
+        </template>
+        <i
+          v-if="showClear"
+          class="el-input__icon el-icon-circle-close el-input__clear"
+          @mousedown.prevent
+          @click="clear"
+        ></i>
+        <i
+          v-if="showPwdVisible"
+          class="el-input__icon el-icon-view el-input__clear"
+          @click="handlePasswordVisible"
+        ></i>
+      </span>
+      <i
+        class="el-input__icon"
+        v-if="validateState"
+        :class="['el-input__validateIcon', validateIcon]"
+      >
+      </i>
+    </span>
+    <!-- 后置元素 -->
+    <div class="el-input-group__append" v-if="$slots.append">
+      <slot name="append"></slot>
+    </div>
   </div>
 </template>
 <script>
 import emitter from "element-ui/src/mixins/emitter";
-import calcTextareaHeight from "./calcTextareaHeight";
-import merge from "element-ui/src/utils/merge";
 import { isKorean } from "element-ui/src/utils/shared";
 
 export default {
@@ -136,7 +101,6 @@ export default {
 
   data() {
     return {
-      textareaCalcStyle: {},
       hovering: false,
       focused: false,
       isComposing: false,
@@ -212,9 +176,6 @@ export default {
         success: "el-icon-circle-check",
         error: "el-icon-circle-close",
       }[this.validateState];
-    },
-    textareaStyle() {
-      return merge({}, this.textareaCalcStyle, { resize: this.resize });
     },
     inputSize() {
       return this.size || this._elFormItemSize || (this.$ELEMENT || {}).size;
@@ -311,25 +272,6 @@ export default {
     },
     select() {
       this.getInput().select();
-    },
-    resizeTextarea() {
-      if (this.$isServer) return;
-      const { autosize, type } = this;
-      if (type !== "textarea") return;
-      if (!autosize) {
-        this.textareaCalcStyle = {
-          minHeight: calcTextareaHeight(this.$refs.textarea).minHeight,
-        };
-        return;
-      }
-      const minRows = autosize.minRows;
-      const maxRows = autosize.maxRows;
-
-      this.textareaCalcStyle = calcTextareaHeight(
-        this.$refs.textarea,
-        minRows,
-        maxRows
-      );
     },
     setNativeInputValue() {
       const input = this.getInput();
@@ -439,7 +381,6 @@ export default {
 
   mounted() {
     this.setNativeInputValue();
-    this.resizeTextarea();
     this.updateIconOffset();
   },
 
