@@ -5,7 +5,6 @@
       inputSize ? 'el-input--' + inputSize : '',
       {
         'is-disabled': inputDisabled,
-        'is-exceed': inputExceed,
         'el-input-group': $slots.prepend || $slots.append,
         'el-input-group--append': $slots.append,
         'el-input-group--prepend': $slots.prepend,
@@ -23,13 +22,12 @@
     </div>
     <input
       :tabindex="tabindex"
-      v-if="type !== 'textarea'"
       class="el-input__inner"
       v-bind="$attrs"
       :type="showPassword ? (passwordVisible ? 'text' : 'password') : type"
       :disabled="inputDisabled"
       :readonly="readonly"
-      :autocomplete="autoComplete || autocomplete"
+      :autocomplete="autocomplete"
       ref="input"
       @compositionstart="handleCompositionStart"
       @compositionupdate="handleCompositionUpdate"
@@ -48,7 +46,7 @@
     <!-- 后置内容 -->
     <span class="el-input__suffix" v-if="getSuffixVisible()">
       <span class="el-input__suffix-inner">
-        <template v-if="!showClear || !showPwdVisible || !isWordLimitVisible">
+        <template v-if="!showClear || !showPwdVisible">
           <slot name="suffix"></slot>
           <i class="el-input__icon" v-if="suffixIcon" :class="suffixIcon"> </i>
         </template>
@@ -127,17 +125,6 @@ export default {
       type: String,
       default: "off",
     },
-    /** @Deprecated in next major version */
-    autoComplete: {
-      type: String,
-      validator(val) {
-        process.env.NODE_ENV !== "production" &&
-          console.warn(
-            "[Element Warn][Input]'auto-complete' property will be deprecated in next major version. please use 'autocomplete' instead."
-          );
-        return true;
-      },
-    },
     validateEvent: {
       type: Boolean,
       default: true,
@@ -204,30 +191,6 @@ export default {
         !this.readonly &&
         (!!this.nativeInputValue || this.focused)
       );
-    },
-    isWordLimitVisible() {
-      return (
-        this.showWordLimit &&
-        this.$attrs.maxlength &&
-        (this.type === "text" || this.type === "textarea") &&
-        !this.inputDisabled &&
-        !this.readonly &&
-        !this.showPassword
-      );
-    },
-    upperLimit() {
-      return this.$attrs.maxlength;
-    },
-    textLength() {
-      if (typeof this.value === "number") {
-        return String(this.value).length;
-      }
-
-      return (this.value || "").length;
-    },
-    inputExceed() {
-      // show exceed style if length of initial value greater then maxlength
-      return this.isWordLimitVisible && this.textLength > this.upperLimit;
     },
   },
 
@@ -361,7 +324,7 @@ export default {
       });
     },
     getInput() {
-      return this.$refs.input || this.$refs.textarea;
+      return this.$refs.input;
     },
     getSuffixVisible() {
       return (
@@ -369,7 +332,6 @@ export default {
         this.suffixIcon ||
         this.showClear ||
         this.showPassword ||
-        this.isWordLimitVisible ||
         (this.validateState && this.needStatusIcon)
       );
     },

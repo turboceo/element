@@ -5,80 +5,6 @@
     @click.stop="toggleMenu"
     v-clickoutside="handleClose"
   >
-    <div
-      class="el-select__tags"
-      v-if="multiple"
-      ref="tags"
-      :style="{ 'max-width': inputWidth - 32 + 'px', width: '100%' }"
-    >
-      <span v-if="collapseTags && selected.length">
-        <el-tag
-          :closable="!selectDisabled"
-          :size="collapseTagSize"
-          :hit="selected[0].hitState"
-          type="info"
-          @close="deleteTag($event, selected[0])"
-          disable-transitions
-        >
-          <span class="el-select__tags-text">{{
-            selected[0].currentLabel
-          }}</span>
-        </el-tag>
-        <el-tag
-          v-if="selected.length > 1"
-          :closable="false"
-          :size="collapseTagSize"
-          type="info"
-          disable-transitions
-        >
-          <span class="el-select__tags-text">+ {{ selected.length - 1 }}</span>
-        </el-tag>
-      </span>
-      <transition-group @after-leave="resetInputHeight" v-if="!collapseTags">
-        <el-tag
-          v-for="item in selected"
-          :key="getValueKey(item)"
-          :closable="!selectDisabled"
-          :size="collapseTagSize"
-          :hit="item.hitState"
-          type="info"
-          @close="deleteTag($event, item)"
-          disable-transitions
-        >
-          <span class="el-select__tags-text">{{ item.currentLabel }}</span>
-        </el-tag>
-      </transition-group>
-
-      <input
-        type="text"
-        class="el-select__input"
-        :class="[selectSize ? `is-${selectSize}` : '']"
-        :disabled="selectDisabled"
-        :autocomplete="autocomplete"
-        @focus="handleFocus"
-        @blur="softFocus = false"
-        @keyup="managePlaceholder"
-        @keydown="resetInputState"
-        @keydown.down.prevent="handleNavigate('next')"
-        @keydown.up.prevent="handleNavigate('prev')"
-        @keydown.enter.prevent="selectOption"
-        @keydown.esc.stop.prevent="visible = false"
-        @keydown.delete="deletePrevTag"
-        @keydown.tab="visible = false"
-        @compositionstart="handleComposition"
-        @compositionupdate="handleComposition"
-        @compositionend="handleComposition"
-        v-model="query"
-        @input="debouncedQueryChange"
-        v-if="filterable"
-        :style="{
-          'flex-grow': '1',
-          width: inputLength / (inputWidth - 32) + '%',
-          'max-width': inputWidth - 42 + 'px',
-        }"
-        ref="input"
-      />
-    </div>
     <el-input
       ref="reference"
       v-model="selectedLabel"
@@ -227,9 +153,8 @@ export default {
     },
 
     showClose() {
-      let hasValue = this.multiple
-        ? Array.isArray(this.value) && this.value.length > 0
-        : this.value !== undefined && this.value !== null && this.value !== "";
+      let hasValue =
+        this.value !== undefined && this.value !== null && this.value !== "";
       let criteria =
         this.clearable &&
         !this.selectDisabled &&
@@ -239,23 +164,17 @@ export default {
     },
 
     iconClass() {
-      return this.remote && this.filterable
-        ? ""
-        : this.visible
-        ? "arrow-up is-reverse"
-        : "arrow-up";
+      return this.visible ? "arrow-up is-reverse" : "arrow-up";
     },
 
     debounce() {
-      return this.remote ? 300 : 0;
+      return 0;
     },
 
     emptyText() {
       if (this.loading) {
         return this.loadingText || this.t("el.select.loading");
       } else {
-        if (this.remote && this.query === "" && this.options.length === 0)
-          return false;
         if (
           this.filterable &&
           this.query &&
@@ -350,7 +269,6 @@ export default {
       type: String,
       default: "value",
     },
-    collapseTags: Boolean,
     popperAppendToBody: {
       type: Boolean,
       default: true,
@@ -396,21 +314,6 @@ export default {
     },
 
     value(val, oldVal) {
-      if (this.multiple) {
-        this.resetInputHeight();
-        if (
-          (val && val.length > 0) ||
-          (this.$refs.input && this.query !== "")
-        ) {
-          this.currentPlaceholder = "";
-        } else {
-          this.currentPlaceholder = this.cachedPlaceHolder;
-        }
-        if (this.filterable && !this.reserveKeyword) {
-          this.query = "";
-          this.handleQueryChange(this.query);
-        }
-      }
       this.setSelected();
       if (this.filterable && !this.multiple) {
         this.inputLength = 20;
@@ -463,7 +366,7 @@ export default {
       } else {
         this.broadcast("ElSelectDropdown", "updatePopper");
         if (this.filterable) {
-          this.query = this.remote ? "" : this.selectedLabel;
+          this.query = this.selectedLabel;
           this.handleQueryChange(this.query);
           if (this.multiple) {
             this.$refs.input.focus();
@@ -487,9 +390,6 @@ export default {
       this.$nextTick(() => {
         this.broadcast("ElSelectDropdown", "updatePopper");
       });
-      if (this.multiple) {
-        this.resetInputHeight();
-      }
       let inputs = this.$el.querySelectorAll("input");
       if ([].indexOf.call(inputs, document.activeElement) === -1) {
         this.setSelected();
@@ -535,14 +435,6 @@ export default {
         if (this.visible) this.broadcast("ElSelectDropdown", "updatePopper");
       });
       this.hoverIndex = -1;
-      if (this.multiple && this.filterable) {
-        this.$nextTick(() => {
-          const length = this.$refs.input.value.length * 15 + 20;
-          this.inputLength = this.collapseTags ? Math.min(50, length) : length;
-          this.managePlaceholder();
-          this.resetInputHeight();
-        });
-      }
       if (this.remote && typeof this.remoteMethod === "function") {
         this.hoverIndex = -1;
         this.remoteMethod(val);
@@ -894,7 +786,6 @@ export default {
 
     handleResize() {
       this.resetInputWidth();
-      if (this.multiple) this.resetInputHeight();
     },
 
     checkDefaultFirstOption() {
@@ -961,11 +852,6 @@ export default {
   },
 
   mounted() {
-    console.warn("log this.$el");
-    console.log(this.$el);
-    if (this.multiple && Array.isArray(this.value) && this.value.length > 0) {
-      this.currentPlaceholder = "";
-    }
     addResizeListener(this.$el, this.handleResize);
 
     const reference = this.$refs.reference;
@@ -978,9 +864,6 @@ export default {
       const input = reference.$el.querySelector("input");
       this.initialInputHeight =
         input.getBoundingClientRect().height || sizeMap[this.selectSize];
-    }
-    if (this.remote && this.multiple) {
-      this.resetInputHeight();
     }
     this.$nextTick(() => {
       if (reference && reference.$el) {
