@@ -470,7 +470,6 @@ export default {
           } else {
             if (!this.remote) {
               this.broadcast("ElOption", "queryChange", "");
-              this.broadcast("ElOptionGroup", "queryChange");
             }
 
             if (this.selectedLabel) {
@@ -549,11 +548,9 @@ export default {
         this.remoteMethod(val);
       } else if (typeof this.filterMethod === "function") {
         this.filterMethod(val);
-        this.broadcast("ElOptionGroup", "queryChange");
       } else {
         this.filteredOptionsCount = this.optionsCount;
         this.broadcast("ElOption", "queryChange", val);
-        this.broadcast("ElOptionGroup", "queryChange");
       }
       if (
         this.defaultFirstOption &&
