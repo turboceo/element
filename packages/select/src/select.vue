@@ -591,15 +591,6 @@ export default {
       return option.hitState;
     },
 
-    deletePrevTag(e) {
-      if (e.target.value.length <= 0 && !this.toggleLastOptionHitState()) {
-        const value = this.value.slice();
-        value.pop();
-        this.$emit("input", value);
-        this.emitChange(value);
-      }
-    },
-
     managePlaceholder() {
       if (this.currentPlaceholder !== "") {
         this.currentPlaceholder = this.$refs.input.value
@@ -751,18 +742,6 @@ export default {
       this.emitChange(value);
       this.visible = false;
       this.$emit("clear");
-    },
-
-    deleteTag(event, tag) {
-      let index = this.selected.indexOf(tag);
-      if (index > -1 && !this.selectDisabled) {
-        const value = this.value.slice();
-        value.splice(index, 1);
-        this.$emit("input", value);
-        this.emitChange(value);
-        this.$emit("remove-tag", tag.value);
-      }
-      event.stopPropagation();
     },
 
     onInputChange() {
