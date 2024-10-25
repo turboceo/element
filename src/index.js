@@ -3,12 +3,12 @@
 import Select from '../packages/select/index.js';
 import Option from '../packages/option/index.js';
 // import locale from 'element-ui/src/locale';
-import CollapseTransition from 'element-ui/src/transitions/collapse-transition';
+// import CollapseTransition from 'element-ui/src/transitions/collapse-transition';
 
 const components = [
   Select,
   Option,
-  CollapseTransition
+  // CollapseTransition
 ];
 
 const install = function(Vue, opts = {}) {
@@ -36,7 +36,7 @@ export default {
   // locale: locale.use,
   // i18n: locale.i18n,
   install,
-  CollapseTransition,
+  // CollapseTransition,
   Select,
   Option
 };
